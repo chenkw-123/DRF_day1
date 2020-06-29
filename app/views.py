@@ -5,10 +5,13 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt,csrf_protect
+from rest_framework.parsers import MultiPartParser,JSONParser,FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from rest_framework import settings
 from app.models import User
+
+from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 
 @csrf_exempt
 # @csrf_protect  全局禁用csrf的时候，使用protect可以使某个视图函数单独添加csrf认证
@@ -39,6 +42,7 @@ class UserView(View):
         # if id:   #查询成功
         if id:
             value = User.objects.filter(id=id).values("username","password","gender").first()
+            # value = User.objects.get(id=id)
             if value:
                 return JsonResponse({
                     "status": 200,
@@ -84,7 +88,16 @@ class UserView(View):
 
 
 class UserAPIView(APIView):
+
+
+    #局部配置渲染器，优先级更高
+    # renderer_classes = (BrowsableAPIRenderer,)
+
     def get(self, request, *args, **kwargs):
+
+        user_id = kwargs.get("pk")
+        user_val = User.objects.get(pk=user_id)
+
         # print("DRF GET VIEW")
         print(request)   #drf视图使用request，django内置的无法使用，其中包含了原生的request
         print(request._request)  # 可以通过_request方法来访问原生的django的request对象
@@ -111,3 +124,17 @@ class UserAPIView(APIView):
         #例如 用row方式 就只能用.data方式获取
 
         return Response("post SUCESS")
+
+
+
+class StudentAPIView(APIView):
+    #解析器的局部使用
+    # parser_classes = [MultiPartParser]
+    parser_classes = [FormParser]
+    # parser_classes = [JSONParser]
+    def post(self, request, *args, **kwargs):
+        print("POST方法")
+        # print(request.POST)
+        print(request.data)
+
+        return Response("SUCCESS")
